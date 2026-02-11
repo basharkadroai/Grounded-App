@@ -1,13 +1,6 @@
 import Foundation
 import SwiftUI
-
-// Superwall Manager for handling paywall and subscription logic
-// Note: This is a placeholder implementation. To use Superwall:
-// 1. Add Superwall SDK via SPM: https://github.com/superwall-me/Superwall-iOS
-// 2. Get your API key from superwall.com
-// 3. Uncomment the import and implementation below
-
-// import SuperwallKit
+import SuperwallKit
 
 class SuperwallManager: ObservableObject {
     static let shared = SuperwallManager()
@@ -22,36 +15,38 @@ class SuperwallManager: ObservableObject {
     // MARK: - Configuration
     
     func configure() {
-        // Uncomment when Superwall SDK is added:
-        // Superwall.configure(apiKey: "YOUR_API_KEY_HERE")
-        // checkSubscriptionStatus()
+        // TODO: Replace with your actual Superwall API key from https://superwall.com/dashboard
+        let apiKey = "pk_YOUR_API_KEY_HERE"
         
-        // For demo purposes, check UserDefaults
-        loadSubscriptionStatus()
+        Superwall.configure(apiKey: apiKey)
+        
+        // Set user attributes
+        Superwall.shared.setUserAttributes([
+            "app_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        ])
+        
+        checkSubscriptionStatus()
     }
     
     // MARK: - Subscription Status
     
     func checkSubscriptionStatus() {
-        // Uncomment when Superwall SDK is added:
-        // isPremium = Superwall.shared.subscriptionStatus.isActive
-        
-        // Demo implementation
-        isPremium = UserDefaults.standard.bool(forKey: "isPremium")
+        isPremium = Superwall.shared.subscriptionStatus == .active
     }
     
     private func loadSubscriptionStatus() {
-        isPremium = UserDefaults.standard.bool(forKey: "isPremium")
+        // Check with Superwall on launch
+        Task {
+            await MainActor.run {
+                checkSubscriptionStatus()
+            }
+        }
     }
     
     // MARK: - Paywall Presentation
     
     func presentPaywall(for event: PaywallEvent) {
-        // Uncomment when Superwall SDK is added:
-        // Superwall.shared.register(event: event.rawValue)
-        
-        // Demo implementation
-        showPaywall = true
+        Superwall.shared.register(event: event.rawValue)
     }
     
     func dismissPaywall() {
@@ -101,17 +96,10 @@ class SuperwallManager: ObservableObject {
         UserDefaults.standard.set(current + 1, forKey: key)
     }
     
-    // MARK: - Demo Purchase (Remove in production)
-    
-    func purchasePremium() {
-        isPremium = true
-        UserDefaults.standard.set(true, forKey: "isPremium")
-    }
+    // MARK: - Restore Purchases
     
     func restorePurchases() {
-        // Uncomment when Superwall SDK is added:
-        // Superwall.shared.restorePurchases()
-        
+        Superwall.shared.restorePurchases()
         checkSubscriptionStatus()
     }
 }

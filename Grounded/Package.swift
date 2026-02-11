@@ -15,15 +15,13 @@ let package = Package(
         )
     ],
     dependencies: [
-        // Superwall SDK - Uncomment when ready to integrate
-        // .package(url: "https://github.com/superwall-me/Superwall-iOS", from: "3.0.0")
+        .package(url: "https://github.com/superwall/Superwall-iOS", from: "3.0.0")
     ],
     targets: [
         .target(
             name: "Grounded",
             dependencies: [
-                // Uncomment when Superwall is added:
-                // .product(name: "SuperwallKit", package: "Superwall-iOS")
+                .product(name: "SuperwallKit", package: "Superwall-iOS")
             ]
         )
     ]

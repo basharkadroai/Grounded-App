@@ -22,5 +22,11 @@
         <key>UIApplicationSupportsMultipleScenes</key>
         <true/>
     </dict>
+    <key>NSUserNotificationsUsageDescription</key>
+    <string>Grounded needs notifications to remind you about habits and daily check-ins.</string>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>remote-notification</string>
+    </array>
 </dict>
 </plist>

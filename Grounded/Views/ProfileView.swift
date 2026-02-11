@@ -6,106 +6,220 @@ struct ProfileView: View {
     
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    HStack {
-                        Image(systemName: "person.circle.fill")
-                            .font(.system(size: 60))
-                            .foregroundStyle(Color("PrimaryColor"))
-                        
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text(userName.isEmpty ? "User" : userName)
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                            
-                            Text(isPremium ? "Premium Member" : "Free Plan")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 10)
-                }
+            ZStack {
+                PremiumDesign.Gradients.backgroundMesh
+                    .ignoresSafeArea()
                 
-                Section("Subscription") {
-                    if isPremium {
-                        NavigationLink {
-                            Text("Manage Subscription")
-                        } label: {
-                            Label("Manage Subscription", systemImage: "crown.fill")
-                        }
-                    } else {
-                        Button {
-                            // Show paywall
-                        } label: {
-                            HStack {
-                                Label("Upgrade to Premium", systemImage: "crown.fill")
-                                    .foregroundStyle(Color("AccentColor"))
-                                Spacer()
-                                Image(systemName: "chevron.right")
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Header
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color("PrimaryColor").opacity(0.1))
+                                    .frame(width: 80, height: 80)
+                                
+                                Image(systemName: "person.circle.fill")
+                                    .font(.system(size: 80))
+                                    .foregroundStyle(Color("PrimaryColor").gradient)
+                                    .shadow(color: Color("PrimaryColor").opacity(0.3), radius: 10)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(userName.isEmpty ? "User" : userName)
+                                    .font(.system(.title2, design: .rounded))
+                                    .fontWeight(.bold)
+                                
+                                Text(isPremium ? "Premium Member" : "Free Plan")
+                                    .font(.system(.subheadline, design: .rounded))
                                     .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 4)
+                                    .background(isPremium ? Color.yellow.opacity(0.2) : Color.gray.opacity(0.2))
+                                    .cornerRadius(12)
+                            }
+                            
+                            Spacer()
+                        }
+                        .padding(20)
+                        
+                        // Subscription Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Subscription")
+                                .font(.system(.headline, design: .rounded))
+                                .padding(.horizontal, 4)
+                            
+                            if isPremium {
+                                NavigationLink {
+                                    Text("Manage Subscription")
+                                } label: {
+                                    SettingsRow(icon: "crown.fill", title: "Manage Subscription", color: .yellow)
+                                }
+                            } else {
+                                Button {
+                                    // Show paywall
+                                } label: {
+                                    HStack {
+                                        ZStack {
+                                            Circle()
+                                                .fill(Color("AccentColor").opacity(0.1))
+                                                .frame(width: 32, height: 32)
+                                            Image(systemName: "crown.fill")
+                                                .foregroundStyle(Color("AccentColor"))
+                                        }
+                                        
+                                        Text("Upgrade to Premium")
+                                            .font(.system(.body, design: .rounded))
+                                            .fontWeight(.medium)
+                                            .foregroundStyle(Color("AccentColor"))
+                                        
+                                        Spacer()
+                                        
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 14, weight: .bold))
+                                            .foregroundStyle(.tertiary)
+                                    }
+                                    .padding()
+                                    .background(Color("AccentColor").opacity(0.05))
+                                    .cornerRadius(16)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .stroke(Color("AccentColor").opacity(0.2), lineWidth: 1)
+                                    )
+                                }
                             }
                         }
+                        .padding(.horizontal)
+                        
+                        // Settings Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Settings")
+                                .font(.system(.headline, design: .rounded))
+                                .padding(.horizontal, 4)
+                            
+                            VStack(spacing: 1) {
+                                NavigationLink {
+                                    NotificationSettingsView()
+                                } label: {
+                                    SettingsRow(icon: "bell.fill", title: "Notifications", color: .blue)
+                                }
+                                
+                                Divider().padding(.leading, 50)
+                                
+                                NavigationLink {
+                                    Text("Privacy Settings")
+                                } label: {
+                                    SettingsRow(icon: "lock.fill", title: "Privacy", color: .green)
+                                }
+                                
+                                Divider().padding(.leading, 50)
+                                
+                                NavigationLink {
+                                    DataExportView()
+                                } label: {
+                                    SettingsRow(icon: "square.and.arrow.up", title: "Export Data", color: .purple)
+                                }
+                                
+                                Divider().padding(.leading, 50)
+                                
+                                NavigationLink {
+                                    CloudSyncView()
+                                } label: {
+                                    SettingsRow(icon: "icloud.fill", title: "Cloud Sync", color: .blue)
+                                }
+                            }
+                            .premiumGlassCard(cornerRadius: 16)
+                        }
+                        .padding(.horizontal)
+                        
+                        // Support Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Support")
+                                .font(.system(.headline, design: .rounded))
+                                .padding(.horizontal, 4)
+                            
+                            VStack(spacing: 1) {
+                                NavigationLink {
+                                    Text("Help Center")
+                                } label: {
+                                    SettingsRow(icon: "questionmark.circle.fill", title: "Help Center", color: .orange)
+                                }
+                                
+                                Divider().padding(.leading, 50)
+                                
+                                NavigationLink {
+                                    Text("Contact Support")
+                                } label: {
+                                    SettingsRow(icon: "envelope.fill", title: "Contact Support", color: .blue)
+                                }
+                                
+                                Divider().padding(.leading, 50)
+                                
+                                NavigationLink {
+                                    AboutView()
+                                } label: {
+                                    SettingsRow(icon: "info.circle.fill", title: "About", color: .gray)
+                                }
+                            }
+                            .premiumGlassCard(cornerRadius: 16)
+                        }
+                        .padding(.horizontal)
+                        
+                        // Sign Out
+                        Button(role: .destructive) {
+                            // Sign out logic
+                        } label: {
+                            Text("Sign Out")
+                                .font(.system(.body, design: .rounded))
+                                .fontWeight(.medium)
+                                .foregroundStyle(.red)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .premiumGlassCard(cornerRadius: 16)
+                        }
+                        .padding(.horizontal)
+                        .padding(.bottom, 20)
                     }
-                }
-                
-                Section("Settings") {
-                    NavigationLink {
-                        NotificationSettingsView()
-                    } label: {
-                        Label("Notifications", systemImage: "bell.fill")
-                    }
-                    
-                    NavigationLink {
-                        Text("Privacy Settings")
-                    } label: {
-                        Label("Privacy", systemImage: "lock.fill")
-                    }
-                    
-                    NavigationLink {
-                        DataExportView()
-                    } label: {
-                        Label("Export Data", systemImage: "square.and.arrow.up")
-                    }
-                    
-                    NavigationLink {
-                        CloudSyncView()
-                    } label: {
-                        Label("Cloud Sync", systemImage: "icloud.fill")
-                    }
-                }
-                
-                Section("Support") {
-                    NavigationLink {
-                        Text("Help Center")
-                    } label: {
-                        Label("Help Center", systemImage: "questionmark.circle.fill")
-                    }
-                    
-                    NavigationLink {
-                        Text("Contact Support")
-                    } label: {
-                        Label("Contact Support", systemImage: "envelope.fill")
-                    }
-                    
-                    NavigationLink {
-                        AboutView()
-                    } label: {
-                        Label("About", systemImage: "info.circle.fill")
-                    }
-                }
-                
-                Section {
-                    Button(role: .destructive) {
-                        // Sign out logic
-                    } label: {
-                        Text("Sign Out")
-                    }
+                    .padding(.vertical)
                 }
             }
             .navigationTitle("Profile")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }
+
+struct SettingsRow: View {
+    let icon: String
+    let title: String
+    let color: Color
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.1))
+                    .frame(width: 32, height: 32)
+                Image(systemName: icon)
+                    .font(.system(size: 14))
+                    .foregroundStyle(color)
+            }
+            
+            Text(title)
+                .font(.system(.body, design: .rounded))
+                .foregroundStyle(.primary)
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(.tertiary)
+        }
+        .padding(16)
+        .contentShape(Rectangle())
+    }
+}
+
 
 struct NotificationSettingsView: View {
     @StateObject private var notificationManager = NotificationManager.shared

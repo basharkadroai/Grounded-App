@@ -12,7 +12,7 @@ class CloudKitManager: ObservableObject {
     @Published var syncError: String?
     
     private init() {
-        container = CKContainer(identifier: "iCloud.com.yourcompany.Grounded")
+        container = CKContainer(identifier: "iCloud.com.grounded.app")
         privateDatabase = container.privateCloudDatabase
         loadLastSyncDate()
     }
