@@ -1,4 +1,4 @@
-name: Build iOS Simulator
+name: Build and Preview iOS App
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     branches: [ main, master ]
 
 jobs:
-  build:
+  build-and-preview:
     runs-on: macos-latest
     
     steps:
@@ -18,26 +18,143 @@ jobs:
         sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
         xcodebuild -version
     
+    - name: List available simulators
+      run: xcrun simctl list devices available
+    
     - name: Build iOS App
       run: |
         cd Grounded
         xcodebuild -project Grounded.xcodeproj \
           -scheme Grounded \
           -sdk iphonesimulator \
-          -configuration Release \
+          -configuration Debug \
           -derivedDataPath build \
           CODE_SIGNING_ALLOWED=NO \
-          CODE_SIGNING_REQUIRED=NO
+          CODE_SIGNING_REQUIRED=NO \
+          ONLY_ACTIVE_ARCH=NO
     
-    - name: Create distributable package
+    - name: Boot Simulator
       run: |
-        cd Grounded/build/Build/Products/Release-iphonesimulator
+        # Use an existing device instead of creating new one
+        DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 15" | head -1 | grep -o '[0-9A-F]\{8\}-[0-9A-F]\{4\}-[0-9A-F]\{4\}-[0-9A-F]\{4\}-[0-9A-F]\{12\}')
+        if [ -z "$DEVICE_ID" ]; then
+          DEVICE_ID=$(xcrun simctl create "TestiPhone" "iPhone 15")
+        fi
+        echo "Using device: $DEVICE_ID"
+        xcrun simctl boot $DEVICE_ID || true
+        sleep 5
+        echo "DEVICE_ID=$DEVICE_ID" >> $GITHUB_ENV
+    
+    - name: Install App on Simulator
+      run: |
+        APP_PATH="Grounded/build/Build/Products/Debug-iphonesimulator/Grounded.app"
+        echo "Installing app from: $APP_PATH"
+        xcrun simctl install $DEVICE_ID "$APP_PATH"
+        sleep 2
+    
+    - name: Launch App and Take Screenshots
+      run: |
+        # Get bundle ID from Info.plist
+        BUNDLE_ID=$(defaults read "$(pwd)/Grounded/build/Build/Products/Debug-iphonesimulator/Grounded.app/Info.plist" CFBundleIdentifier)
+        echo "Bundle ID: $BUNDLE_ID"
+        
+        # Launch app
+        xcrun simctl launch $DEVICE_ID $BUNDLE_ID
+        sleep 3
+        
+        # Take initial screenshot
+        xcrun simctl io $DEVICE_ID screenshot screenshot-home.png
+        sleep 2
+        
+        # Try to interact and take more screenshots
+        xcrun simctl io $DEVICE_ID screenshot screenshot-main.png
+        
+        echo "Screenshots captured!"
+    
+    - name: Record Video Demo
+      run: |
+        BUNDLE_ID=$(defaults read "$(pwd)/Grounded/build/Build/Products/Debug-iphonesimulator/Grounded.app/Info.plist" CFBundleIdentifier)
+        
+        # Start recording
+        xcrun simctl io $DEVICE_ID recordVideo --codec=h264 app-demo.mp4 &
+        RECORD_PID=$!
+        
+        # Let it record for 15 seconds
+        sleep 15
+        
+        # Stop recording
+        kill -SIGINT $RECORD_PID
+        wait $RECORD_PID 2>/dev/null || true
+        sleep 2
+        
+        echo "Video recorded!"
+    
+    - name: Create App Package
+      run: |
+        cd Grounded/build/Build/Products/Debug-iphonesimulator
         zip -r Grounded-Simulator.zip Grounded.app
         mv Grounded-Simulator.zip $GITHUB_WORKSPACE/
     
-    - name: Upload artifact
+    - name: Generate Preview HTML
+      run: |
+        cat > preview.html << 'EOF'
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Grounded App Preview</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 1200px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
+                h1 { color: #8BA888; }
+                .preview { background: white; padding: 30px; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                img { max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+                video { max-width: 100%; border-radius: 8px; }
+                .download { background: #8BA888; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block; margin: 10px 10px 10px 0; }
+            </style>
+        </head>
+        <body>
+            <h1>🍃 Grounded App Preview</h1>
+            <div class="preview">
+                <h2>App Screenshots</h2>
+                <p>Your SwiftUI app running in iOS Simulator:</p>
+                <img src="screenshot-home.png" alt="Home Screen">
+                <img src="screenshot-main.png" alt="Main Screen">
+            </div>
+            <div class="preview">
+                <h2>Video Demo</h2>
+                <video controls>
+                    <source src="app-demo.mp4" type="video/mp4">
+                </video>
+            </div>
+            <div class="preview">
+                <h2>Downloads</h2>
+                <a href="Grounded-Simulator.zip" class="download">📦 Download App (.zip)</a>
+                <a href="screenshot-home.png" class="download" download>📸 Download Screenshot 1</a>
+                <a href="screenshot-main.png" class="download" download>📸 Download Screenshot 2</a>
+                <a href="app-demo.mp4" class="download" download>🎥 Download Video</a>
+            </div>
+        </body>
+        </html>
+        EOF
+    
+    - name: Upload Preview Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: grounded-simulator-build
-        path: Grounded-Simulator.zip
+        name: grounded-app-preview
+        path: |
+          screenshot-*.png
+          app-demo.mp4
+          Grounded-Simulator.zip
+          preview.html
         retention-days: 30
+    
+    - name: Summary
+      run: |
+        echo "✅ Build complete!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "📱 Your app has been built and previewed!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Download the artifacts to see:" >> $GITHUB_STEP_SUMMARY
+        echo "- Screenshots of your app running" >> $GITHUB_STEP_SUMMARY
+        echo "- Video recording of the app" >> $GITHUB_STEP_SUMMARY
+        echo "- Built app package" >> $GITHUB_STEP_SUMMARY
+        echo "- HTML preview page" >> $GITHUB_STEP_SUMMARY
