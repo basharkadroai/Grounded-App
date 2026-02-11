@@ -12,6 +12,7 @@ struct BreathWorkView: View {
     @State private var postMoodRating: Int?
     @State private var isBreathing = false
     @State private var breathScale: CGFloat = 1.0
+    @State private var breathBlur: CGFloat = 10.0
     
     let totalCycles = 5
     let breathPhases = ["Breathe In", "Hold", "Breathe Out", "Hold"]
@@ -20,109 +21,149 @@ struct BreathWorkView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(
-                    colors: [Color("BackgroundColor"), Color("PrimaryColor").opacity(0.1)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+                // Premium Background
+                PremiumDesign.Gradients.backgroundMesh
+                    .ignoresSafeArea()
                 
                 if preMoodRating == nil {
                     preMoodView
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else if cycleCount < totalCycles {
                     breathingView
+                        .transition(.opacity)
                 } else if postMoodRating == nil {
                     postMoodView
+                        .transition(.move(edge: .top).combined(with: .opacity))
                 } else {
                     completionView
+                        .transition(.scale.combined(with: .opacity))
                 }
             }
+            .animation(.spring(response: 0.6, dampingFraction: 0.8), value: preMoodRating)
+            .animation(.spring(response: 0.6, dampingFraction: 0.8), value: cycleCount)
+            .animation(.spring(response: 0.6, dampingFraction: 0.8), value: postMoodRating)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Exit") {
                         dismiss()
                     }
+                    .font(.system(.body, design: .rounded).weight(.medium))
                 }
             }
         }
     }
     
     var preMoodView: some View {
-        VStack(spacing: 30) {
-            Text("Before we begin")
-                .font(.title)
-                .fontWeight(.bold)
+        VStack(spacing: 32) {
+            VStack(spacing: 12) {
+                Text("Before we begin")
+                    .font(.system(.largeTitle, design: .rounded))
+                    .fontWeight(.bold)
+                
+                Text("How are you feeling right now?")
+                    .font(.system(.headline, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
             
-            Text("How are you feeling right now?")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            
-            HStack(spacing: 15) {
+            HStack(spacing: 18) {
                 ForEach(1...5, id: \.self) { rating in
                     Button {
-                        preMoodRating = rating
-                        startBreathing()
+                        withAnimation {
+                            preMoodRating = rating
+                            startBreathing()
+                        }
                     } label: {
                         Text("\(rating)")
-                            .font(.title2)
-                            .fontWeight(.semibold)
+                            .font(.system(.title2, design: .rounded))
+                            .fontWeight(.bold)
                             .foregroundStyle(.white)
-                            .frame(width: 50, height: 50)
-                            .background(Color("AccentColor").opacity(0.7))
-                            .cornerRadius(25)
+                            .frame(width: 60, height: 60)
+                            .background(
+                                Circle()
+                                    .fill(Color("AccentColor").gradient)
+                            )
+                            .premiumShadow()
                     }
                 }
             }
             
             Text("1 = Very Disconnected, 5 = Grounded")
-                .font(.caption)
+                .font(.system(.caption, design: .rounded))
                 .foregroundStyle(.secondary)
+                .fontWeight(.medium)
         }
+        .padding(32)
+        .premiumGlassCard()
         .padding()
     }
     
     var breathingView: some View {
-        VStack(spacing: 40) {
-            Spacer()
-            
+        VStack(spacing: 60) {
             // Cycle counter
-            Text("Cycle \(cycleCount + 1) of \(totalCycles)")
-                .font(.headline)
-                .foregroundStyle(.secondary)
+            VStack(spacing: 8) {
+                Text("BREATHING EXERCISE")
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color("PrimaryColor"))
+                    .letterSpacing(2)
+                
+                Text("Cycle \(cycleCount + 1) of \(totalCycles)")
+                    .font(.system(.title3, design: .rounded))
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.top, 40)
             
             // Breathing circle
             ZStack {
+                // Outer Glow
+                Circle()
+                    .fill(Color("PrimaryColor").opacity(0.15))
+                    .frame(width: 320, height: 320)
+                    .scaleEffect(breathScale * 1.1)
+                    .blur(radius: breathBlur)
+                
+                // Secondary Circle
+                Circle()
+                    .fill(Color("PrimaryColor").opacity(0.3))
+                    .frame(width: 260, height: 260)
+                    .scaleEffect(breathScale * 1.05)
+                
+                // Main Circle
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [Color("PrimaryColor"), Color("PrimaryColor").opacity(0.6)],
+                            colors: [Color("PrimaryColor"), Color("PrimaryColor").opacity(0.7)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 200, height: 200)
+                    .frame(width: 220, height: 220)
                     .scaleEffect(breathScale)
-                    .animation(.easeInOut(duration: phaseDurations[currentPhase]), value: breathScale)
+                    .premiumShadow()
                 
-                VStack(spacing: 10) {
+                VStack(spacing: 12) {
                     Image(systemName: getPhaseIcon())
-                        .font(.system(size: 40))
+                        .font(.system(size: 44))
                         .foregroundStyle(.white)
+                        .contentTransition(.symbolEffect(.replace))
                     
                     Text(breathPhases[currentPhase])
-                        .font(.title2)
-                        .fontWeight(.semibold)
+                        .font(.system(.title2, design: .rounded))
+                        .fontWeight(.bold)
                         .foregroundStyle(.white)
                 }
             }
+            .animation(.easeInOut(duration: phaseDurations[currentPhase]), value: breathScale)
             
             // Instructions
             Text(getPhaseInstruction())
-                .font(.body)
+                .font(.system(.body, design: .rounded))
                 .foregroundStyle(.secondary)
+                .fontWeight(.medium)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
+                .frame(height: 60)
             
             Spacer()
             
@@ -130,86 +171,110 @@ struct BreathWorkView: View {
             Button {
                 skipToEnd()
             } label: {
-                Text("Skip to End")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                Text("Skip Exercise")
+                    .font(.system(.subheadline, design: .rounded))
+                    .fontWeight(.bold)
+                    .foregroundStyle(.secondary.opacity(0.6))
             }
-            .padding(.bottom)
+            .padding(.bottom, 20)
         }
     }
     
     var postMoodView: some View {
-        VStack(spacing: 30) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 60))
-                .foregroundStyle(Color("AccentColor"))
+        VStack(spacing: 32) {
+            VStack(spacing: 16) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 64))
+                    .foregroundStyle(Color("AccentColor").gradient)
+                    .symbolEffect(.bounce, value: cycleCount)
+                
+                Text("Breathing Complete")
+                    .font(.system(.title, design: .rounded))
+                    .fontWeight(.bold)
+                
+                Text("How are you feeling now?")
+                    .font(.system(.headline, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
             
-            Text("Breathing Complete")
-                .font(.title)
-                .fontWeight(.bold)
-            
-            Text("How are you feeling now?")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            
-            HStack(spacing: 15) {
+            HStack(spacing: 18) {
                 ForEach(1...5, id: \.self) { rating in
                     Button {
-                        postMoodRating = rating
-                        saveSession()
+                        withAnimation {
+                            postMoodRating = rating
+                            saveSession()
+                        }
                     } label: {
                         Text("\(rating)")
-                            .font(.title2)
-                            .fontWeight(.semibold)
+                            .font(.system(.title2, design: .rounded))
+                            .fontWeight(.bold)
                             .foregroundStyle(.white)
-                            .frame(width: 50, height: 50)
-                            .background(Color("AccentColor").opacity(0.7))
-                            .cornerRadius(25)
+                            .frame(width: 60, height: 60)
+                            .background(
+                                Circle()
+                                    .fill(Color("AccentColor").gradient)
+                            )
+                            .premiumShadow()
                     }
                 }
             }
             
             Text("1 = Very Disconnected, 5 = Grounded")
-                .font(.caption)
+                .font(.system(.caption, design: .rounded))
                 .foregroundStyle(.secondary)
+                .fontWeight(.medium)
         }
+        .padding(32)
+        .premiumGlassCard()
         .padding()
     }
     
     var completionView: some View {
-        VStack(spacing: 30) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 60))
-                .foregroundStyle(Color("AccentColor"))
-            
-            Text("Well Done!")
-                .font(.title)
-                .fontWeight(.bold)
-            
-            if let pre = preMoodRating, let post = postMoodRating, post > pre {
-                Text("Your mood improved by \(post - pre) point\(post - pre > 1 ? "s" : "")")
-                    .font(.headline)
+        VStack(spacing: 32) {
+            VStack(spacing: 20) {
+                ZStack {
+                    Circle()
+                        .fill(Color("AccentColor").opacity(0.1))
+                        .frame(width: 120, height: 120)
+                    
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 56))
+                        .foregroundStyle(Color("AccentColor").gradient)
+                }
+                
+                Text("Well Done!")
+                    .font(.system(.largeTitle, design: .rounded))
+                    .fontWeight(.bold)
+                
+                if let pre = preMoodRating, let post = postMoodRating, post > pre {
+                    HStack(spacing: 8) {
+                        Image(systemName: "arrow.up.circle.fill")
+                        Text("Mood improved by \(post - pre) point\(post - pre > 1 ? "s" : "")")
+                    }
+                    .font(.system(.headline, design: .rounded))
                     .foregroundStyle(Color("PrimaryColor"))
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 16)
+                    .background(Color("PrimaryColor").opacity(0.1))
+                    .cornerRadius(20)
+                }
+                
+                Text("“Inhale the future, exhale the past.”")
+                    .font(.system(.body, design: .rounded).italic())
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
             }
-            
-            Text("Your breath is your anchor")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
             
             Button {
                 dismiss()
             } label: {
-                Text("Done")
-                    .font(.headline)
-                    .foregroundStyle(.white)
+                Text("Complete")
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color("AccentColor"))
-                    .cornerRadius(12)
             }
-            .padding(.horizontal)
+            .buttonStyle(.premium(color: Color("AccentColor")))
         }
+        .padding(32)
+        .premiumGlassCard()
         .padding()
     }
     
@@ -225,27 +290,35 @@ struct BreathWorkView: View {
         
         // Animate breath
         if currentPhase == 0 { // Breathe in
-            breathScale = 1.5
+            breathScale = 1.6
+            breathBlur = 20
         } else if currentPhase == 2 { // Breathe out
             breathScale = 1.0
+            breathBlur = 5
         }
         
         // Move to next phase
         DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
-            currentPhase += 1
-            
-            if currentPhase >= breathPhases.count {
-                currentPhase = 0
-                cycleCount += 1
+            withAnimation {
+                currentPhase += 1
+                
+                if currentPhase >= breathPhases.count {
+                    currentPhase = 0
+                    cycleCount += 1
+                }
             }
             
-            performBreathCycle()
+            if isBreathing {
+                performBreathCycle()
+            }
         }
     }
     
     private func skipToEnd() {
         isBreathing = false
-        cycleCount = totalCycles
+        withAnimation {
+            cycleCount = totalCycles
+        }
     }
     
     private func getPhaseIcon() -> String {
@@ -260,10 +333,10 @@ struct BreathWorkView: View {
     
     private func getPhaseInstruction() -> String {
         switch currentPhase {
-        case 0: return "Breathe in slowly through your nose"
+        case 0: return "Inhale slowly through your nose..."
         case 1: return "Hold your breath gently"
-        case 2: return "Breathe out slowly through your mouth"
-        case 3: return "Pause before the next breath"
+        case 2: return "Exhale slowly through your mouth"
+        case 3: return "Pause and prepare..."
         default: return ""
         }
     }
@@ -280,3 +353,4 @@ struct BreathWorkView: View {
         modelContext.insert(session)
     }
 }
+

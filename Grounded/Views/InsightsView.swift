@@ -8,101 +8,119 @@ struct InsightsView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 25) {
-                    // Premium Feature Banner
-                    NavigationLink(destination: AdvancedInsightsView()) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 5) {
-                                HStack {
+            ZStack {
+                PremiumDesign.Gradients.backgroundMesh
+                    .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 28) {
+                        // Premium Feature Banner
+                        NavigationLink(destination: AdvancedInsightsView()) {
+                            HStack(spacing: 16) {
+                                ZStack {
+                                    Circle()
+                                        .fill(.white.opacity(0.2))
+                                        .frame(width: 44, height: 44)
+                                    
                                     Image(systemName: "crown.fill")
-                                        .foregroundStyle(.yellow)
-                                    Text("Advanced Insights")
-                                        .font(.headline)
+                                        .foregroundStyle(.yellow.gradient)
+                                        .font(.title3)
                                 }
-                                Text("View trends, patterns, and correlations")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding()
-                        .background(
-                            LinearGradient(
-                                colors: [Color("PrimaryColor").opacity(0.1), Color("AccentColor").opacity(0.1)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .cornerRadius(12)
-                    }
-                    .padding(.horizontal)
-                    // Grounding Sessions Chart
-                    VStack(alignment: .leading, spacing: 15) {
-                        Text("Grounding Sessions")
-                            .font(.headline)
-                        
-                        if sessions.isEmpty {
-                            emptyChartView(message: "No sessions yet")
-                        } else {
-                            sessionsChart
-                        }
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                    
-                    // Mood Improvement
-                    VStack(alignment: .leading, spacing: 15) {
-                        Text("Mood Improvement")
-                            .font(.headline)
-                        
-                        if let avgImprovement = averageMoodImprovement {
-                            HStack {
-                                Image(systemName: "arrow.up.circle.fill")
-                                    .font(.title)
-                                    .foregroundStyle(Color("AccentColor"))
                                 
-                                VStack(alignment: .leading) {
-                                    Text(String(format: "+%.1f", avgImprovement))
-                                        .font(.title)
-                                        .fontWeight(.bold)
-                                    Text("Average improvement")
-                                        .font(.caption)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Advanced Insights")
+                                        .font(.system(.headline, design: .rounded))
+                                        .foregroundStyle(.primary)
+                                    Text("View trends, patterns, and correlations")
+                                        .font(.system(.caption, design: .rounded))
                                         .foregroundStyle(.secondary)
                                 }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundStyle(.tertiary)
                             }
-                        } else {
-                            emptyChartView(message: "Complete sessions to see insights")
+                            .padding(16)
+                            .background(
+                                PremiumDesign.Gradients.primary.opacity(0.1)
+                            )
+                            .premiumGlassCard(cornerRadius: 18)
                         }
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                    
-                    // Habit Completion Rate
-                    VStack(alignment: .leading, spacing: 15) {
-                        Text("Habit Completion")
-                            .font(.headline)
+                        .buttonStyle(PlainButtonStyle())
+                        .padding(.horizontal)
                         
-                        if habits.isEmpty {
-                            emptyChartView(message: "No habits tracked yet")
-                        } else {
-                            habitCompletionView
+                        // Grounding Sessions Chart
+                        VStack(alignment: .leading, spacing: 20) {
+                            Text("Grounding Sessions")
+                                .font(.system(.headline, design: .rounded))
+                            
+                            if sessions.isEmpty {
+                                emptyChartView(message: "No sessions yet")
+                            } else {
+                                sessionsChart
+                            }
                         }
+                        .padding(20)
+                        .premiumGlassCard(cornerRadius: 20)
+                        .padding(.horizontal)
+                        
+                        // Mood Improvement
+                        VStack(alignment: .leading, spacing: 20) {
+                            Text("Mood Improvement")
+                                .font(.system(.headline, design: .rounded))
+                            
+                            if let avgImprovement = averageMoodImprovement {
+                                HStack(spacing: 20) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color("AccentColor").opacity(0.1))
+                                            .frame(width: 60, height: 60)
+                                        
+                                        Image(systemName: "arrow.up.circle.fill")
+                                            .font(.system(size: 32))
+                                            .foregroundStyle(Color("AccentColor").gradient)
+                                    }
+                                    
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(String(format: "+%.1f", avgImprovement))
+                                            .font(.system(.title, design: .rounded))
+                                            .fontWeight(.bold)
+                                        Text("Average improvement per session")
+                                            .font(.system(.caption, design: .rounded))
+                                            .foregroundStyle(.secondary)
+                                            .fontWeight(.medium)
+                                    }
+                                }
+                            } else {
+                                emptyChartView(message: "Complete sessions to see insights")
+                            }
+                        }
+                        .padding(20)
+                        .premiumGlassCard(cornerRadius: 20)
+                        .padding(.horizontal)
+                        
+                        // Habit Completion Rate
+                        VStack(alignment: .leading, spacing: 20) {
+                            Text("Habit Completion")
+                                .font(.system(.headline, design: .rounded))
+                            
+                            if habits.isEmpty {
+                                emptyChartView(message: "No habits tracked yet")
+                            } else {
+                                habitCompletionView
+                            }
+                        }
+                        .padding(20)
+                        .premiumGlassCard(cornerRadius: 20)
+                        .padding(.horizontal)
+                        
+                        Spacer(minLength: 50)
                     }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
-                    .padding(.horizontal)
+                    .padding(.vertical)
                 }
-                .padding(.vertical)
             }
             .navigationTitle("Insights")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
     
@@ -117,24 +135,38 @@ struct InsightsView: View {
                 x: .value("Day", item.date, unit: .day),
                 y: .value("Sessions", item.count)
             )
-            .foregroundStyle(Color("PrimaryColor"))
+            .foregroundStyle(Color("PrimaryColor").gradient)
+            .cornerRadius(4)
         }
-        .frame(height: 200)
+        .frame(height: 180)
+        .chartXAxis {
+            AxisMarks(values: .stride(by: .day)) { _ in
+                AxisValueLabel(format: .dateTime.weekday(.abbreviated), centered: true)
+                    .font(.system(size: 10, design: .rounded))
+            }
+        }
     }
     
     var habitCompletionView: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 16) {
             ForEach(habits) { habit in
-                HStack {
-                    Text(habit.name)
-                        .font(.subheadline)
+                VStack(spacing: 8) {
+                    HStack {
+                        Text(habit.name)
+                            .font(.system(.subheadline, design: .rounded))
+                            .fontWeight(.medium)
+                        
+                        Spacer()
+                        
+                        Text("\(completionRate(for: habit))%")
+                            .font(.system(.subheadline, design: .rounded))
+                            .fontWeight(.bold)
+                            .foregroundStyle(Color("AccentColor"))
+                    }
                     
-                    Spacer()
-                    
-                    Text("\(completionRate(for: habit))%")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(Color("AccentColor"))
+                    ProgressView(value: Double(completionRate(for: habit)), total: 100)
+                        .tint(Color("AccentColor").gradient)
+                        .scaleEffect(x: 1, y: 1.5, anchor: .center)
                 }
             }
         }
@@ -151,14 +183,15 @@ struct InsightsView: View {
     }
     
     func emptyChartView(message: String) -> some View {
-        VStack {
+        VStack(spacing: 12) {
             Image(systemName: "chart.bar.xaxis")
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary.opacity(0.3))
             Text(message)
-                .font(.subheadline)
+                .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(.secondary)
         }
+        .frame(frame: .infinity)
         .frame(height: 150)
     }
     
@@ -175,3 +208,4 @@ struct InsightsView: View {
         return Int((Double(completedDays) / 7.0) * 100)
     }
 }
+

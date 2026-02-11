@@ -236,8 +236,12 @@ struct AboutView: View {
             }
             
             Section {
-                Link("Privacy Policy", destination: URL(string: "https://example.com/privacy")!)
-                Link("Terms of Service", destination: URL(string: "https://example.com/terms")!)
+                Button("Privacy Policy") {
+                    // TODO: Add privacy policy URL
+                }
+                Button("Terms of Service") {
+                    // TODO: Add terms of service URL
+                }
             }
         }
         .navigationTitle("About")

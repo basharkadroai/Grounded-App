@@ -21,48 +21,63 @@ struct ResourceLibraryView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Search Bar
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundStyle(.secondary)
-                        TextField("Search resources", text: $searchText)
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                    
-                    // Category Filter
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 10) {
-                            CategoryChip(title: "All", isSelected: selectedCategory == nil) {
-                                selectedCategory = nil
-                            }
+            ZStack {
+                PremiumDesign.Gradients.backgroundMesh
+                    .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Search Bar
+                        HStack(spacing: 12) {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundStyle(Color("PrimaryColor"))
+                                .fontWeight(.bold)
                             
-                            ForEach([ResourceCategory.understandingDPDR, .copingStrategies, .treatment, .community, .crisis], id: \.self) { category in
-                                CategoryChip(title: category.rawValue, isSelected: selectedCategory == category) {
-                                    selectedCategory = category
+                            TextField("Search resources", text: $searchText)
+                                .font(.system(.body, design: .rounded))
+                        }
+                        .padding(16)
+                        .premiumGlassCard(cornerRadius: 16)
+                        .padding(.horizontal)
+                        
+                        // Category Filter
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                CategoryChip(title: "All", isSelected: selectedCategory == nil) {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        selectedCategory = nil
+                                    }
                                 }
+                                
+                                ForEach([ResourceCategory.understandingDPDR, .copingStrategies, .treatment, .community, .crisis], id: \.self) { category in
+                                    CategoryChip(title: category.rawValue, isSelected: selectedCategory == category) {
+                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                            selectedCategory = category
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                        
+                        // Resources List
+                        LazyVStack(spacing: 16) {
+                            ForEach(filteredResources) { resource in
+                                NavigationLink(destination: ResourceDetailView(resource: resource)) {
+                                    ResourceListCard(resource: resource)
+                                }
+                                .buttonStyle(PlainButtonStyle())
                             }
                         }
                         .padding(.horizontal)
+                        
+                        Spacer(minLength: 50)
                     }
-                    
-                    // Resources List
-                    LazyVStack(spacing: 15) {
-                        ForEach(filteredResources) { resource in
-                            NavigationLink(destination: ResourceDetailView(resource: resource)) {
-                                ResourceListCard(resource: resource)
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
+                    .padding(.vertical)
                 }
-                .padding(.vertical)
             }
             .navigationTitle("Resources")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }
@@ -75,13 +90,26 @@ struct CategoryChip: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.subheadline)
-                .fontWeight(isSelected ? .semibold : .regular)
-                .foregroundStyle(isSelected ? .white : .primary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(isSelected ? Color("AccentColor") : Color(.systemGray6))
-                .cornerRadius(20)
+                .font(.system(.subheadline, design: .rounded))
+                .fontWeight(isSelected ? .bold : .medium)
+                .foregroundStyle(isSelected ? .white : .secondary)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(
+                    ZStack {
+                        if isSelected {
+                            Color("AccentColor").gradient
+                        } else {
+                            Color.white.opacity(0.1)
+                        }
+                    }
+                )
+                .cornerRadius(24)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24)
+                        .stroke(.white.opacity(0.1), lineWidth: 1)
+                )
+                .premiumShadow()
         }
     }
 }
@@ -90,42 +118,47 @@ struct ResourceListCard: View {
     let resource: Resource
     
     var body: some View {
-        HStack(alignment: .top, spacing: 15) {
-            VStack(alignment: .leading, spacing: 8) {
+        HStack(spacing: 16) {
+            // Icon
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color("PrimaryColor").opacity(0.1))
+                    .frame(width: 54, height: 54)
+                
+                Image(systemName: resource.isPremium ? "crown.fill" : "doc.text.fill")
+                    .foregroundStyle(resource.isPremium ? .yellow : Color("PrimaryColor"))
+                    .font(.title3)
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text(resource.category.rawValue)
-                        .font(.caption)
+                    Text(resource.category.rawValue.uppercased())
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
                         .foregroundStyle(Color("PrimaryColor"))
-                        .fontWeight(.semibold)
-                    
-                    if resource.isPremium {
-                        Image(systemName: "crown.fill")
-                            .font(.caption)
-                            .foregroundStyle(.yellow)
-                    }
+                        .letterSpacing(1)
                 }
                 
                 Text(resource.title)
-                    .font(.headline)
+                    .font(.system(.headline, design: .rounded))
+                    .fontWeight(.bold)
                     .foregroundStyle(.primary)
                 
-                HStack {
+                HStack(spacing: 4) {
                     Image(systemName: "clock")
-                        .font(.caption)
                     Text("\(resource.readTime) min read")
-                        .font(.caption)
                 }
+                .font(.system(.caption, design: .rounded))
                 .foregroundStyle(.secondary)
             }
             
             Spacer()
             
             Image(systemName: "chevron.right")
-                .foregroundStyle(.secondary)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(.tertiary)
         }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .padding(16)
+        .premiumGlassCard(cornerRadius: 18)
     }
 }
 
@@ -135,48 +168,64 @@ struct ResourceDetailView: View {
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // Header
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(resource.category.rawValue)
-                        .font(.subheadline)
-                        .foregroundStyle(Color("PrimaryColor"))
-                        .fontWeight(.semibold)
+            VStack(alignment: .leading, spacing: 32) {
+                // Header Image/Hero
+                ZStack(alignment: .bottomLeading) {
+                    RoundedRectangle(cornerRadius: 24)
+                        .fill(Color("PrimaryColor").gradient.opacity(0.15))
+                        .frame(height: 180)
                     
-                    Text(resource.title)
-                        .font(.title)
-                        .fontWeight(.bold)
-                    
-                    HStack {
-                        Image(systemName: "clock")
-                            .font(.caption)
-                        Text("\(resource.readTime) min read")
-                            .font(.caption)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(resource.category.rawValue.uppercased())
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color("PrimaryColor"))
+                            .letterSpacing(1)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(.white.opacity(0.8))
+                            .cornerRadius(10)
+                        
+                        Text(resource.title)
+                            .font(.system(.largeTitle, design: .rounded))
+                            .fontWeight(.bold)
+                            .foregroundStyle(.primary)
+                        
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock")
+                            Text("\(resource.readTime) min read")
+                        }
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.secondary)
                     }
-                    .foregroundStyle(.secondary)
+                    .padding(24)
                 }
-                
-                Divider()
                 
                 // Content
                 Text(resource.content)
-                    .font(.body)
-                    .lineSpacing(8)
+                    .font(.system(.body, design: .rounded))
+                    .lineSpacing(10)
+                    .foregroundStyle(.primary.opacity(0.9))
             }
-            .padding()
+            .padding(24)
         }
         .navigationBarTitleDisplayMode(.inline)
+        .background(PremiumDesign.Gradients.backgroundMesh.ignoresSafeArea())
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    isBookmarked.toggle()
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                        isBookmarked.toggle()
+                    }
                 } label: {
                     Image(systemName: isBookmarked ? "bookmark.fill" : "bookmark")
+                        .foregroundStyle(isBookmarked ? Color("AccentColor") : .primary)
+                        .symbolEffect(.bounce, value: isBookmarked)
                 }
             }
         }
     }
 }
+
 
 // Sample Resources
 struct SampleResources {
