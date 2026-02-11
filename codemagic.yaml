@@ -1,0 +1,24 @@
+workflows:
+  ios-workflow:
+    name: iOS Simulator Build
+    max_build_duration: 60
+    environment:
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Build iOS app
+        script: |
+          cd Grounded
+          xcodebuild -project Grounded.xcodeproj \
+            -scheme Grounded \
+            -sdk iphonesimulator \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+      - name: Package app
+        script: |
+          cd Grounded/build/Build/Products/Release-iphonesimulator
+          zip -r Grounded.zip Grounded.app
+    artifacts:
+      - Grounded/build/Build/Products/Release-iphonesimulator/Grounded.zip
