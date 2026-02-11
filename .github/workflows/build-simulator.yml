@@ -23,8 +23,7 @@ jobs:
     
     - name: Build iOS App
       run: |
-        cd Grounded
-        xcodebuild -project Grounded.xcodeproj \
+        xcodebuild -project Grounded/Grounded.xcodeproj \
           -scheme Grounded \
           -sdk iphonesimulator \
           -configuration Debug \
@@ -47,7 +46,7 @@ jobs:
     
     - name: Install App on Simulator
       run: |
-        APP_PATH="Grounded/build/Build/Products/Debug-iphonesimulator/Grounded.app"
+        APP_PATH="build/Build/Products/Debug-iphonesimulator/Grounded.app"
         echo "Installing app from: $APP_PATH"
         xcrun simctl install $DEVICE_ID "$APP_PATH"
         sleep 2
@@ -55,7 +54,7 @@ jobs:
     - name: Launch App and Take Screenshots
       run: |
         # Get bundle ID from Info.plist
-        BUNDLE_ID=$(defaults read "$(pwd)/Grounded/build/Build/Products/Debug-iphonesimulator/Grounded.app/Info.plist" CFBundleIdentifier)
+        BUNDLE_ID=$(defaults read "$(pwd)/build/Build/Products/Debug-iphonesimulator/Grounded.app/Info.plist" CFBundleIdentifier)
         echo "Bundle ID: $BUNDLE_ID"
         
         # Launch app
@@ -73,7 +72,7 @@ jobs:
     
     - name: Record Video Demo
       run: |
-        BUNDLE_ID=$(defaults read "$(pwd)/Grounded/build/Build/Products/Debug-iphonesimulator/Grounded.app/Info.plist" CFBundleIdentifier)
+        BUNDLE_ID=$(defaults read "$(pwd)/build/Build/Products/Debug-iphonesimulator/Grounded.app/Info.plist" CFBundleIdentifier)
         
         # Start recording
         xcrun simctl io $DEVICE_ID recordVideo --codec=h264 app-demo.mp4 &
@@ -91,7 +90,7 @@ jobs:
     
     - name: Create App Package
       run: |
-        cd Grounded/build/Build/Products/Debug-iphonesimulator
+        cd build/Build/Products/Debug-iphonesimulator
         zip -r Grounded-Simulator.zip Grounded.app
         mv Grounded-Simulator.zip $GITHUB_WORKSPACE/
     
