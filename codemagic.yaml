@@ -6,19 +6,24 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Build iOS app
+      - name: Build with Swift Package Manager
         script: |
           cd Grounded
-          xcodebuild -project Grounded.xcodeproj \
-            -scheme Grounded \
-            -sdk iphonesimulator \
-            -configuration Release \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO
-      - name: Package app
+          swift build -c release \
+            --sdk $(xcrun --sdk iphonesimulator --show-sdk-path) \
+            --arch arm64 \
+            --arch x86_64
+      - name: Create app bundle
         script: |
-          cd Grounded/build/Build/Products/Release-iphonesimulator
+          cd Grounded
+          mkdir -p Grounded.app
+          cp -r .build/release/* Grounded.app/ || true
+          cp Info.plist Grounded.app/
+          cp -r Assets.xcassets Grounded.app/
+          cp -r Models Grounded.app/
+          cp -r Views Grounded.app/
+          cp -r Services Grounded.app/
+          cp *.swift Grounded.app/
           zip -r Grounded.zip Grounded.app
     artifacts:
-      - Grounded/build/Build/Products/Release-iphonesimulator/Grounded.zip
+      - Grounded/Grounded.zip
